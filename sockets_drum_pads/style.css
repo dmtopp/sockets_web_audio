@@ -1,0 +1,39 @@
+div{
+  width: 200px;
+  height: 200px;
+  background-color: rgba(255,186,28,1);
+  display: inline-block;
+}
+
+div:active{
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,ffc942+73 */
+  background: rgb(255,255,255); /* Old browsers */
+  background: -moz-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%, rgba(255,186,28,1)  73%); /* FF3.6-15 */
+  background: -webkit-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 0%, rgba(255,186,28,1)  73%); /* Chrome10-25,Safari5.1-6 */
+  background: radial-gradient(ellipse at center,  rgba(255,255,255,1) 0%,rgba(255,186,28,1)  73%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ffc942',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+}
+
+#chat{
+  height: 200px;
+  width: 800px;
+  border: 3px solid rgba(226, 88, 209, 0.5);
+  margin-bottom: 5px;
+  overflow-y: scroll;
+  background-color: aliceblue;
+}
+#contentWrap{
+  display: none;
+}
+#chatWrap{
+  float: left;
+  border: 2px purple dotted;
+}
+.error{
+  color: red;
+}
+
+#chat p{
+  margin: 0;
+}
