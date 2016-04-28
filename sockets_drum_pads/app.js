@@ -1,8 +1,6 @@
 var context      = new AudioContext(),
     masterVolume = context.createGain();
 
-
-
 // set up querty-hancock keyboard
 var keyboard = new QwertyHancock({
   id:      'keyboard',
@@ -10,25 +8,6 @@ var keyboard = new QwertyHancock({
   height:  200,
   octaves: 3
 })
-
-// object to store active oscillators
-var oscillators = {};
-
-// context.destination ~= master out
-// chains look roughly like osc -> effects/filters -> masterVolume -> context.destination aka speakers or headphones
-masterVolume.gain.value = 0.3;
-masterVolume.connect(context.destination);
-
-function Oscillator(context, wave, freq){
-  this.osc = context.createOscillator();
-  this.osc.type = wave;
-  this.setFrequency(freq);
-  this.osc.start(0);
-
-  this.input = this.osc;
-  this.output = this.osc;
-
-}
 
 keyboard.data = {
   osc1: 'square',
@@ -41,8 +20,19 @@ keyboard.data = {
   osc2Detune: 5
 }
 
+// object to store active oscillators
+var oscillators = {};
 
-keyboard.keyDown = function (note, frequency) {
+// context.destination ~= master out
+// chains look roughly like osc -> effects/filters -> masterVolume -> context.destination aka speakers or headphones
+masterVolume.gain.value = 0.3;
+masterVolume.connect(context.destination);
+
+// function to play oscillators based on keyboard triggers
+// the frequency parameter comes from the qwerty-hancock object,
+// the 'data' parameter is synth information either from keyboard data
+// or sent over via sockets
+function playNote(data, frequency){
   var osc = context.createOscillator();
   var osc2 = context.createOscillator();
   var oscVolume = context.createGain();
@@ -51,23 +41,21 @@ keyboard.keyDown = function (note, frequency) {
   osc.start(context.currentTime);
   osc2.start(context.currentTime);
 
-  osc.type = keyboard.data.osc1;
-  osc2.type = keyboard.data.osc2;
+  osc.type = data.osc1;
+  osc2.type = data.osc2;
 
   // set gain for both oscillators
   // start gain at 0 and then ramp up over attack time
   oscVolume.gain.value = 0;
-  oscVolume.gain.setTargetAtTime(1, context.currentTime, keyboard.data.attack);
+  oscVolume.gain.setTargetAtTime(1, context.currentTime, data.attack);
 
   osc.frequency.value  = frequency;
   osc2.frequency.value = frequency;
-  osc.detune.value = keyboard.data.osc1Detune;
-  osc2.detune.value = keyboard.data.osc2Detune;
+  osc.detune.value = data.osc1Detune;
+  osc2.detune.value = data.osc2Detune;
 
-  filter.type = keyboard.data.filterType;
-  filter.frequency.value = keyboard.data.filterCutoff;
-
-
+  filter.type = data.filterType;
+  filter.frequency.value = data.filterCutoff;
 
   // (osc, osc2) -> oscVolume -> master out
   osc.connect(oscVolume);
@@ -81,12 +69,6 @@ keyboard.keyDown = function (note, frequency) {
   }
 
   oscillators[frequency] = oscObject;
-
-}
-
-keyboard.keyUp = function (note, frequency) {
-
-  oscillators[frequency].volume.gain.setTargetAtTime(0, context.currentTime, keyboard.data.release);
 
 }
 
@@ -146,26 +128,36 @@ function addAudioProperties(object) {
 
 
 window.onload = function() {
+  console.log('the window is loaded and so am i....');
 
-
-// this is the part you are working on !
-// ========================================
+  // event listeners for our synth parameters
   var keyParams = document.querySelectorAll('.keyboardParams');
 
   for (var i = 0; i < keyParams.length; i++){
     keyParams[i].addEventListener('change', function(){
-      console.log(this.name);
-      console.log(this.value);
-      keyboard.data[this.name] = this.value + 0.001;
+      switch (this.name) {
+        case 'attack':
+        case 'release':
+          keyboard.data[this.name] = (this.value / 100) * 2 + 0.001;
+          break;
+        case 'filterCutoff':
+          keyboard.data[this.name] = (this.value / 100) * 20000;
+          break;
+        case 'osc1Detune':
+        case 'osc2Detune':
+          keyboard.data[this.name] = (this.value / 100) * 100;
+          break;
+        case 'filterType':
+        case 'osc1':
+        case 'osc2':
+          keyboard.data[this.name] = this.value;
+          break;
+      }
     })
   }
-// this is the part you are working on !
-// ========================================
 
-  console.log('the window is loaded and so am i....');
-
-  console.log(keyboard.data);
-
+  // sockets for drum pads
+  // =====================
   var pads        = document.querySelectorAll('#soundpad div'),
       sockets     = io.connect(),
       messageForm = document.getElementById('send-messages'),
@@ -187,18 +179,48 @@ window.onload = function() {
 
   // add event listeners to our buttons
   for (var i = 0; i < pads.length; i++) {
-    // console.log(pads[i].dataset.sound);
-    console.log(pads[i]);
-    // addAudioProperties(pads[i]);
     pads[i].addEventListener('click', function(){
       sockets.emit('buttonPress', this.id);
-      // this.play();
     });
   }
 
   sockets.on('playSound', function(buttonId){
     sounds[buttonId].play();
     // console.log('wow! a sound!');
+  })
+
+  // sockets for keyboard
+  // ====================
+  keyboard.keyDown = function (note, frequency) {
+    // var oscSocketData = playNote(keyboard.data, frequency);
+    var oscSocketData = {
+      data: keyboard.data,
+      frequency: frequency
+    }
+    // console.log(oscSocketData);
+    sockets.emit('keyboardDown', oscSocketData);
+  }
+
+  keyboard.keyUp = function (note, frequency) {
+    // oscillators[frequency].volume.gain.setTargetAtTime(0, context.currentTime, keyboard.data.release);
+    oscSocketData = {
+      data: keyboard.data,
+      frequency: frequency
+    }
+    sockets.emit('keyboardUp', oscSocketData);
+  }
+
+  sockets.on('keyboardDown', function(keyboardData){
+    // console.log('key down');
+    // console.log(keyboardData.frequency);
+    playNote(keyboardData.data, keyboardData.frequency);
+  })
+
+  sockets.on('keyboardUp', function(keyboardData){
+    // console.log('key up');
+    release = keyboardData.data.release;
+    frequency = keyboardData.frequency;
+    oscillators[frequency].volume.gain.setTargetAtTime(0, context.currentTime, release);
   })
 
   // event listener for our chat form

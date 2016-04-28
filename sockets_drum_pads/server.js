@@ -15,9 +15,18 @@ app.get('/', function(req, res){
 
 io.sockets.on('connection', function(socket){
 
-  // event listener for sound triggers
+  // event listener for drum triggers
   socket.on('buttonPress', function(buttonId){
     io.sockets.emit('playSound', buttonId);
+  })
+
+  // event listeners for keyboard events
+  socket.on('keyboardDown', function(data){
+    io.sockets.emit('keyboardDown', data)
+  })
+
+  socket.on('keyboardUp', function(data){
+    io.sockets.emit('keyboardUp', data)
   })
 
   // event listener for sent message
