@@ -23,7 +23,49 @@
       <input type="submit">
     </form>
 
+    <div id="keyboard"></div>
+
+
+    <select class="keyboardParams" name="osc1">
+      <option value="square">Square</option>
+      <option value="sin">Sin</option>
+      <option value="triangle">Triangle</option>
+      <option value="sawtooth">Sawtooth</option>
+    </select>
+
+    <select class="keyboardParams" name="osc2">
+      <option value="square">Square</option>
+      <option value="sin">Sin</option>
+      <option value="triangle">Triangle</option>
+      <option value="sawtooth">Sawtooth</option>
+    </select>
+
+    <select class="keyboardParams" name="filterType">
+      <option value="lowpass">Lowpass</option>
+      <option value="highpass">Highpass</option>
+      <option value="bandpass">Bandpass</option>
+    </select>
+
+    <small>Attack</small>
+    <input class="keyboardParams" type="range" name="attack" value="0" min="0" max="2">
+    <small>Release</small>
+    <input class="keyboardParams" type="range" name="release" value="0" min="0" max="2">
+    <small>Cutoff</small>
+    <input class="keyboardParams" type="range" name="filterCutoff" value="50">
+    <small>Osc1Detune</small>
+    <input class="keyboardParams" type="range" name="osc1Detune" value="0">
+    <small>Osc2Detune</small>
+    <input class="keyboardParams" type="range" name="osc2Detune" value="0">
+
+
+
+
+
+
+
+
     <script type="text/javascript" src="socket.io/socket.io.js"></script>
+    <script src="qwerty-hancock.min.js" charset="utf-8"></script>
     <script type="text/javascript" src="app.js"></script>
   </body>
 </html>
