@@ -163,7 +163,15 @@ window.onload = function() {
       messageForm = document.getElementById('send-messages'),
       messageBox  = document.getElementById('message'),
       chat        = document.getElementById('chat'),
-      username    = document.getElementById('username');
+      username    = document.getElementById('username'),
+      roomForm    = document.getElementById('join-room'),
+      roomName    = document.getElementById('room-name');
+
+
+  roomForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    sockets.emit('join-room', roomName.value);
+  })
 
   // load our sounds from our urls
   sounds.forEach(function(sound){
